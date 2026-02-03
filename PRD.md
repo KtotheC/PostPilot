@@ -106,10 +106,46 @@ PostPilot/
 3. ✅ Reddit multi-post (loop through subreddits)
 4. ✅ CLI interface
 5. ✅ Credential storage
+6. ✅ **Post Verification** - Confirm posts went live
 
 **Goal:** Be able to run:
 ```bash
-postpilot reddit -s "Homeplate,travelball" -t "Title" -b "Body text" -u "https://link.com"
+postpilot reddit -s "Homeplate,travelball" -t "Title" -b "Body text" -u "https://link.com" --verify
 ```
 
-And have it post to both subreddits automatically.
+And have it post to both subreddits automatically, then verify each post exists.
+
+---
+
+## Feature: Post Verification (--verify)
+
+After posting, PostPilot will:
+1. Wait 5-10 seconds for Reddit to process
+2. Navigate to the subreddit's /new page or user profile
+3. Search for the post by title
+4. Confirm it exists and is visible
+5. Capture a screenshot as proof (saved to `./screenshots/`)
+6. Log result: "✅ Verified: Post live at [URL]" or "❌ Failed: Post not found"
+
+### CLI Flags
+- `--verify` - Enable post verification (default: off)
+- `--screenshot` - Save screenshot proof (default: on when --verify)
+- `--retry <n>` - Retry posting if verification fails (default: 0)
+- `--notify` - Send notification on completion (future: Telegram/Discord webhook)
+
+### Verification Output
+```
+📤 Posting to r/Homeplate...
+✅ Posted: "Your Title Here"
+🔍 Verifying...
+📸 Screenshot saved: ./screenshots/homeplate-2024-02-02-201500.png
+✅ Verified: https://reddit.com/r/Homeplate/comments/abc123/
+
+📤 Posting to r/travelball...
+✅ Posted: "Your Title Here"  
+🔍 Verifying...
+📸 Screenshot saved: ./screenshots/travelball-2024-02-02-201530.png
+✅ Verified: https://reddit.com/r/travelball/comments/def456/
+
+Summary: 2/2 posts verified ✅
+```
