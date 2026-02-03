@@ -1,6 +1,7 @@
 import type { Browser, Page } from 'puppeteer';
 import {
   launchBrowser,
+  launchBrowserWithProfile,
   newPage,
   randomDelay,
   humanType,
@@ -231,7 +232,7 @@ export async function postToFacebook(options: FacebookPostOptions): Promise<Post
     };
   }
 
-  const browser = await launchBrowser({ headless: true });
+  const browser = await launchBrowserWithProfile({ headless: true });
   const page = await newPage(browser);
 
   try {

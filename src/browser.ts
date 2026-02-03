@@ -7,7 +7,72 @@ import * as os from 'os';
 
 puppeteer.use(StealthPlugin());
 
-// Chrome cookie paths by OS
+// Get Chrome user data directory by OS
+export function getChromeUserDataDir(): string {
+  const platform = os.platform();
+  const home = os.homedir();
+  
+  if (platform === 'darwin') {
+    return path.join(home, 'Library/Application Support/Google/Chrome');
+  } else if (platform === 'win32') {
+    return path.join(home, 'AppData/Local/Google/Chrome/User Data');
+  } else {
+    return path.join(home, '.config/google-chrome');
+  }
+}
+
+// Get PostPilot's own Chrome profile directory (copy of user's profile)
+export function getPostPilotProfileDir(): string {
+  const home = os.homedir();
+  return path.join(home, '.postpilot', 'chrome-profile');
+}
+
+// Copy Chrome profile for PostPilot use (one-time setup)
+export async function setupChromeProfile(): Promise<string> {
+  const sourceDir = getChromeUserDataDir();
+  const targetDir = getPostPilotProfileDir();
+  
+  // Check if Chrome profile exists
+  if (!fs.existsSync(sourceDir)) {
+    throw new Error(`Chrome user data not found at ${sourceDir}`);
+  }
+  
+  // Create target directory
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  
+  // Copy essential profile files (cookies, login data, etc.)
+  const filesToCopy = [
+    'Default/Cookies',
+    'Default/Login Data',
+    'Default/Web Data',
+    'Default/Preferences',
+    'Local State',
+  ];
+  
+  for (const file of filesToCopy) {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+    
+    if (fs.existsSync(sourcePath)) {
+      const targetFolder = path.dirname(targetPath);
+      if (!fs.existsSync(targetFolder)) {
+        fs.mkdirSync(targetFolder, { recursive: true });
+      }
+      try {
+        fs.copyFileSync(sourcePath, targetPath);
+      } catch (err) {
+        // File might be locked, skip it
+        console.warn(`⚠️  Could not copy ${file} (may be locked)`);
+      }
+    }
+  }
+  
+  return targetDir;
+}
+
+// Chrome cookie paths by OS (legacy)
 function getChromeCookiePath(): string {
   const platform = os.platform();
   const home = os.homedir();
@@ -78,48 +143,60 @@ export async function checkLoggedIn(page: Page, platform: 'reddit' | 'twitter' |
   return false;
 }
 
-// Auto-login using Chrome cookies
+// Auto-login using Chrome profile or cookies
 export async function autoLoginWithCookies(page: Page, platform: 'reddit' | 'twitter' | 'facebook'): Promise<boolean> {
-  const domains: Record<string, string> = {
-    reddit: 'reddit.com',
-    twitter: 'twitter.com',
-    facebook: 'facebook.com',
-  };
-
   const urls: Record<string, string> = {
     reddit: 'https://www.reddit.com',
     twitter: 'https://twitter.com',
     facebook: 'https://www.facebook.com',
   };
 
-  console.log(`🍪 Loading ${platform} cookies from Chrome...`);
-  
-  const cookies = await loadChromeCookies(domains[platform]);
-  
-  if (cookies.length === 0) {
-    console.log(`⚠️  No cookies found for ${platform}. Manual login required.`);
-    return false;
-  }
-
-  console.log(`📦 Found ${cookies.length} cookies for ${platform}`);
-  
-  // Apply cookies before navigation
-  await applyCookiesToPage(page, cookies);
+  console.log(`🔐 Checking ${platform} login status...`);
   
   // Navigate to the site
   await page.goto(urls[platform], { waitUntil: 'networkidle2' });
   await sleep(2000);
   
-  // Check if logged in
+  // Check if logged in (browser might have profile cookies)
   const loggedIn = await checkLoggedIn(page, platform);
   
   if (loggedIn) {
-    console.log(`✅ Logged into ${platform} via Chrome cookies`);
+    console.log(`✅ Already logged into ${platform}`);
     return true;
-  } else {
-    console.log(`⚠️  Cookies loaded but not logged in. Session may have expired.`);
-    return false;
   }
+  
+  // Try loading cookies from Chrome if not logged in
+  console.log(`🍪 Trying Chrome cookies for ${platform}...`);
+  
+  const domains: Record<string, string> = {
+    reddit: 'reddit.com',
+    twitter: 'twitter.com',
+    facebook: 'facebook.com',
+  };
+  
+  try {
+    const cookies = await loadChromeCookies(domains[platform]);
+    
+    if (cookies.length > 0) {
+      console.log(`📦 Found ${cookies.length} cookies`);
+      await applyCookiesToPage(page, cookies);
+      
+      // Reload and check again
+      await page.goto(urls[platform], { waitUntil: 'networkidle2' });
+      await sleep(2000);
+      
+      const loggedInNow = await checkLoggedIn(page, platform);
+      if (loggedInNow) {
+        console.log(`✅ Logged into ${platform} via cookies`);
+        return true;
+      }
+    }
+  } catch (err) {
+    // Cookie extraction might fail if Chrome is open
+  }
+  
+  console.log(`⚠️  Not logged into ${platform}. Manual login required.`);
+  return false;
 }
 
 export interface BrowserOptions {
@@ -162,6 +239,53 @@ export async function closeBrowser(): Promise<void> {
   if (browserInstance) {
     await browserInstance.close();
     browserInstance = null;
+  }
+}
+
+// Launch browser with Chrome profile (uses your existing logins)
+export async function launchBrowserWithProfile(options: BrowserOptions = {}): Promise<Browser> {
+  if (browserInstance) {
+    return browserInstance;
+  }
+
+  const { headless = true, slowMo = 0 } = options;
+  const chromeUserDataDir = getChromeUserDataDir();
+  
+  // Check if Chrome profile exists
+  if (!fs.existsSync(chromeUserDataDir)) {
+    console.warn('⚠️  Chrome profile not found, using fresh browser');
+    return launchBrowser(options);
+  }
+
+  console.log('🔗 Launching browser with Chrome profile...');
+  
+  try {
+    browserInstance = await puppeteer.launch({
+      headless: headless ? 'shell' : false,
+      slowMo,
+      // Use Chrome profile directly
+      userDataDir: chromeUserDataDir,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-infobars',
+        '--disable-dev-shm-usage',
+        '--disable-blink-features=AutomationControlled',
+        '--window-size=1920,1080',
+        // Use a different profile to avoid conflicts with running Chrome
+        '--profile-directory=PostPilot',
+      ],
+      defaultViewport: {
+        width: 1920,
+        height: 1080,
+      },
+    });
+    
+    console.log('✅ Browser launched with Chrome profile');
+    return browserInstance;
+  } catch (error) {
+    console.warn('⚠️  Could not use Chrome profile, falling back to fresh browser');
+    return launchBrowser(options);
   }
 }
 

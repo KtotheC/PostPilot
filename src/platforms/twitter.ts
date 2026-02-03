@@ -1,6 +1,7 @@
 import type { Browser, Page } from 'puppeteer';
 import {
   launchBrowser,
+  launchBrowserWithProfile,
   newPage,
   randomDelay,
   humanType,
@@ -188,7 +189,7 @@ export async function postToTwitter(options: TwitterPostOptions): Promise<PostRe
     };
   }
 
-  const browser = await launchBrowser({ headless: true });
+  const browser = await launchBrowserWithProfile({ headless: true });
   const page = await newPage(browser);
 
   try {
