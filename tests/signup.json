@@ -1,0 +1,17 @@
+{
+  "name": "User Signup Flow",
+  "baseUrl": "https://example.com",
+  "steps": [
+    { "goto": "/" },
+    { "click": "text=Sign Up", "timeout": 5000 },
+    { "waitFor": "#email", "timeout": 10000 },
+    { "type": "#email", "text": "newuser@example.com" },
+    { "type": "#password", "text": "SecurePassword123!" },
+    { "type": "#confirm-password", "text": "SecurePassword123!" },
+    { "type": "#name", "text": "Test User" },
+    { "click": "button[type=submit]" },
+    { "waitFor": ".dashboard, .welcome, [data-testid=dashboard]", "timeout": 15000 },
+    { "screenshot": "signup-complete" },
+    { "verify": "h1, .welcome-message", "contains": "Welcome" }
+  ]
+}

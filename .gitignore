@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment and credentials
+.env
+.env.local
+.env.*.local
+
+# PostPilot data directory (credentials, db)
+# Note: The actual data is stored in ~/.postpilot/
+
+# Screenshots
+screenshots/
+
+# Campaigns with sensitive data
+campaigns/*.local.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test outputs
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/

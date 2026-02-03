@@ -1,0 +1,14 @@
+{
+  "name": "User Login Flow",
+  "baseUrl": "https://example.com",
+  "steps": [
+    { "goto": "/login" },
+    { "waitFor": "#email, input[type=email], input[name=email]", "timeout": 10000 },
+    { "type": "#email, input[type=email], input[name=email]", "text": "user@example.com" },
+    { "type": "#password, input[type=password], input[name=password]", "text": "password123" },
+    { "click": "button[type=submit], .login-button, text=Log In" },
+    { "waitFor": ".dashboard, [data-testid=dashboard], .home", "timeout": 15000 },
+    { "screenshot": "login-success" },
+    { "verify": "h1, .page-title", "contains": "Dashboard" }
+  ]
+}

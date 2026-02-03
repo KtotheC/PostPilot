@@ -1,0 +1,43 @@
+{
+  "name": "postpilot",
+  "version": "1.0.0",
+  "description": "CLI-based automation tool for social media posting and GUI testing",
+  "main": "dist/index.js",
+  "bin": {
+    "postpilot": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "postinstall": "npm run build || true"
+  },
+  "keywords": [
+    "reddit",
+    "automation",
+    "puppeteer",
+    "gui-testing",
+    "cli"
+  ],
+  "author": "Casey",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "chalk": "^4.1.2",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.7",
+    "ora": "^5.4.1",
+    "puppeteer": "^23.11.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

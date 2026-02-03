@@ -1,0 +1,24 @@
+{
+  "name": "E-commerce Checkout Flow",
+  "baseUrl": "https://example.com",
+  "steps": [
+    { "goto": "/products" },
+    { "waitFor": ".product-card, .product-item, [data-testid=product]", "timeout": 10000 },
+    { "click": ".product-card:first-child .add-to-cart, .product-item:first-child button" },
+    { "wait": 1000 },
+    { "waitFor": ".cart-badge, .cart-count, [data-testid=cart-indicator]", "timeout": 5000 },
+    { "screenshot": "item-added" },
+    { "click": "text=Cart, .cart-icon, a[href*=cart]" },
+    { "waitFor": ".cart-page, .cart-items, [data-testid=cart]", "timeout": 10000 },
+    { "screenshot": "cart-page" },
+    { "click": "text=Checkout, .checkout-button, button[data-testid=checkout]" },
+    { "waitFor": "#email, input[name=email]", "timeout": 10000 },
+    { "type": "#email, input[name=email]", "text": "customer@example.com" },
+    { "type": "#name, input[name=name]", "text": "Test Customer" },
+    { "type": "#address, input[name=address]", "text": "123 Test Street" },
+    { "type": "#city, input[name=city]", "text": "Test City" },
+    { "type": "#zip, input[name=zip], input[name=postal]", "text": "12345" },
+    { "screenshot": "checkout-form-filled" },
+    { "verify": ".order-total, .total", "contains": "$" }
+  ]
+}
