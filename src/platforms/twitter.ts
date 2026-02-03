@@ -7,6 +7,7 @@ import {
   takeScreenshot,
   sleep,
   humanSleep,
+  autoLoginWithCookies,
 } from '../browser.js';
 import { getTwitterCredentials } from '../config.js';
 import { recordPost, updatePostVerification, postExists } from '../db.js';
@@ -33,13 +34,19 @@ const TWITTER_URL = 'https://twitter.com';
 const LOGIN_URL = 'https://twitter.com/i/flow/login';
 
 export async function loginToTwitter(page: Page): Promise<boolean> {
-  const credentials = getTwitterCredentials();
+  console.log('🔐 Logging into Twitter...');
 
-  if (!credentials) {
-    throw new Error('Twitter credentials not found. Set TWITTER_USERNAME and TWITTER_PASSWORD in .env or use postpilot login twitter');
+  // Try cookie-based auth first (for Google OAuth users)
+  const cookieLogin = await autoLoginWithCookies(page, 'twitter');
+  if (cookieLogin) {
+    return true;
   }
 
-  console.log('🔐 Logging into Twitter...');
+  // Fall back to username/password
+  const credentials = getTwitterCredentials();
+  if (!credentials) {
+    throw new Error('Twitter credentials not found and Chrome cookies unavailable. Run: postpilot login twitter');
+  }
 
   await page.goto(LOGIN_URL, { waitUntil: 'networkidle2' });
   await randomDelay(2000, 3000);

@@ -7,6 +7,7 @@ import {
   takeScreenshot,
   sleep,
   humanSleep,
+  autoLoginWithCookies,
 } from '../browser.js';
 import { getFacebookCredentials } from '../config.js';
 import { recordPost, updatePostVerification, postExists } from '../db.js';
@@ -35,13 +36,19 @@ const FACEBOOK_URL = 'https://www.facebook.com';
 const LOGIN_URL = 'https://www.facebook.com/login';
 
 export async function loginToFacebook(page: Page): Promise<boolean> {
-  const credentials = getFacebookCredentials();
+  console.log('🔐 Logging into Facebook...');
 
-  if (!credentials) {
-    throw new Error('Facebook credentials not found. Set FACEBOOK_EMAIL and FACEBOOK_PASSWORD in .env or use postpilot login facebook');
+  // Try cookie-based auth first (for Google OAuth users)
+  const cookieLogin = await autoLoginWithCookies(page, 'facebook');
+  if (cookieLogin) {
+    return true;
   }
 
-  console.log('🔐 Logging into Facebook...');
+  // Fall back to username/password
+  const credentials = getFacebookCredentials();
+  if (!credentials) {
+    throw new Error('Facebook credentials not found and Chrome cookies unavailable. Run: postpilot login facebook');
+  }
 
   await page.goto(LOGIN_URL, { waitUntil: 'networkidle2' });
   await randomDelay(1500, 2500);

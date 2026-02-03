@@ -1,0 +1,10 @@
+{
+  "name": "ClipKeeper Site Test",
+  "baseUrl": "https://getclipkeeper.com",
+  "steps": [
+    { "goto": "/" },
+    { "waitFor": "body", "timeout": 10000 },
+    { "screenshot": "clipkeeper-home" },
+    { "verify": "body", "contains": "ClipKeeper" }
+  ]
+}

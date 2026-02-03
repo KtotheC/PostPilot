@@ -1,0 +1,23 @@
+{
+  "name": "ClipKeeper Cross-Post",
+  "description": "Cross-post ClipKeeper to multiple subreddits and Twitter",
+  "steps": [
+    {
+      "platform": "reddit",
+      "action": "post",
+      "data": {
+        "subreddits": ["travelball", "LittleLeague", "softballcoach"],
+        "title": "Free Chrome extension to download GameChanger clips - no more screen recording!",
+        "body": "Built ClipKeeper because I was frustrated with GameChanger's premium pricing just to download my kid's clips. One click downloads, smart file naming, works on highlights AND full games.\n\nFree version: 5 downloads/week\nPro: $29/year unlimited\n\nhttps://getclipkeeper.com"
+      },
+      "delay": 60000
+    },
+    {
+      "platform": "twitter",
+      "action": "post",
+      "data": {
+        "content": "Finally! Download your kids' GameChanger clips with one click. No more screen recording or premium subscriptions. Free Chrome extension 🎬⚾\n\nhttps://getclipkeeper.com\n\n#GameChanger #YouthSports #Baseball #Softball"
+      }
+    }
+  ]
+}

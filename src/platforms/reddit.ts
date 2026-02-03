@@ -9,6 +9,7 @@ import {
   sleep,
   humanSleep,
   scrollToElement,
+  autoLoginWithCookies,
 } from '../browser.js';
 import { getRedditCredentials } from '../config.js';
 import { recordPost, updatePostVerification, postExists } from '../db.js';
@@ -39,13 +40,19 @@ const REDDIT_URL = 'https://www.reddit.com';
 const LOGIN_URL = 'https://www.reddit.com/login';
 
 export async function loginToReddit(page: Page): Promise<boolean> {
-  const credentials = getRedditCredentials();
+  console.log('🔐 Logging into Reddit...');
 
-  if (!credentials) {
-    throw new Error('Reddit credentials not found. Set REDDIT_USERNAME and REDDIT_PASSWORD in .env or use postpilot config');
+  // Try cookie-based auth first (for Google OAuth users)
+  const cookieLogin = await autoLoginWithCookies(page, 'reddit');
+  if (cookieLogin) {
+    return true;
   }
 
-  console.log('🔐 Logging into Reddit...');
+  // Fall back to username/password
+  const credentials = getRedditCredentials();
+  if (!credentials) {
+    throw new Error('Reddit credentials not found and Chrome cookies unavailable. Run: postpilot login reddit');
+  }
 
   await page.goto(LOGIN_URL, { waitUntil: 'networkidle2' });
   await randomDelay(1000, 2000);

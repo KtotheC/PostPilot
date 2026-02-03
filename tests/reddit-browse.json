@@ -1,0 +1,12 @@
+{
+  "name": "Reddit Browse Test",
+  "baseUrl": "https://reddit.com",
+  "steps": [
+    { "goto": "/" },
+    { "waitFor": "body", "timeout": 10000 },
+    { "screenshot": "reddit-home" },
+    { "goto": "/r/Homeplate" },
+    { "waitFor": "body", "timeout": 10000 },
+    { "screenshot": "reddit-homeplate" }
+  ]
+}
