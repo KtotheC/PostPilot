@@ -10,7 +10,12 @@
 
 ## Overview
 
-PostPilot is a CLI-based social media automation tool that uses Puppeteer to cross-post content to multiple platforms. Built to save time when promoting products across Reddit, Facebook, and other social platforms.
+PostPilot is a CLI-based automation tool with two core capabilities:
+
+1. **Social Media Automation** - Cross-post content to Reddit, Facebook, and other platforms
+2. **GUI Testing** - Automated UI testing for SaaS apps and websites
+
+Built with Puppeteer to save time on marketing AND ensure your apps work correctly after every deploy.
 
 ## Core Features
 
@@ -67,18 +72,105 @@ postpilot campaign --config ./campaigns/clipkeeper-launch.json
 PostPilot/
 ├── src/
 │   ├── index.ts          # CLI entry point
+│   ├── commands/
+│   │   ├── reddit.ts     # Reddit posting command
+│   │   ├── facebook.ts   # Facebook posting command
+│   │   └── test.ts       # GUI testing command
 │   ├── platforms/
 │   │   ├── reddit.ts     # Reddit automation
 │   │   ├── facebook.ts   # Facebook automation
 │   │   └── twitter.ts    # Twitter automation (optional)
+│   ├── testing/
+│   │   ├── runner.ts     # Test flow executor
+│   │   ├── actions.ts    # Test actions (click, type, verify, etc.)
+│   │   └── reporter.ts   # Test results output
 │   ├── browser.ts        # Puppeteer setup/helpers
 │   ├── config.ts         # Config loading
 │   └── db.ts             # SQLite post history
+├── tests/                # Example test flows
+│   ├── signup.json
+│   ├── login.json
+│   └── checkout.json
 ├── campaigns/            # Example campaign configs
+├── screenshots/          # Test screenshots (gitignored)
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+---
+
+## Core Feature 2: GUI Testing
+
+Test any web app or SaaS with automated browser flows.
+
+### CLI Usage
+```bash
+# Test a specific flow
+postpilot test --url "https://clausehunter.com" --flow ./tests/signup.json
+
+# Test local development
+postpilot test --url "http://localhost:3000" --flow ./tests/checkout.json
+
+# Quick smoke test (just check page loads)
+postpilot test --url "https://getclipkeeper.com" --smoke
+```
+
+### Test Flow Format
+```json
+{
+  "name": "ClauseHunter Signup Flow",
+  "baseUrl": "https://clausehunter.com",
+  "steps": [
+    { "goto": "/" },
+    { "click": "text=Get Started" },
+    { "waitFor": "#email" },
+    { "type": "#email", "text": "test@example.com" },
+    { "click": "button[type=submit]" },
+    { "waitFor": ".dashboard", "timeout": 10000 },
+    { "screenshot": "signup-complete" },
+    { "verify": "h1", "contains": "Welcome" }
+  ]
+}
+```
+
+### Supported Actions
+| Action | Description |
+|--------|-------------|
+| `goto` | Navigate to URL |
+| `click` | Click element (CSS selector or text=) |
+| `type` | Type text into input |
+| `waitFor` | Wait for element to appear |
+| `screenshot` | Capture screenshot |
+| `verify` | Assert element contains text |
+| `wait` | Wait N milliseconds |
+| `scroll` | Scroll to element |
+
+### Output
+```
+🧪 Testing: ClauseHunter Signup Flow
+  ✅ goto /
+  ✅ click "Get Started"
+  ✅ waitFor #email (0.8s)
+  ✅ type #email
+  ✅ click submit
+  ✅ waitFor .dashboard (2.1s)
+  📸 signup-complete.png
+  ✅ verify h1 contains "Welcome"
+
+Result: 8/8 passed ✅
+Screenshots saved to: ./screenshots/
+```
+
+### Pre-built Test Templates
+PostPilot includes starter templates for common flows:
+- `signup` - User registration
+- `login` - User authentication  
+- `checkout` - Payment flow (Stripe)
+- `upload` - File upload
+- `crud` - Create/Read/Update/Delete
+
+---
 
 ## Future Features
 
@@ -89,6 +181,9 @@ PostPilot/
 - [ ] LinkedIn posting
 - [ ] Proxy support (for multiple accounts)
 - [ ] GUI dashboard (web-based)
+- [ ] Test recording (record browser actions → generate test file)
+- [ ] CI/CD integration (GitHub Actions, Vercel hooks)
+- [ ] Slack/Discord notifications for test failures
 
 ## Anti-Detection Measures
 
